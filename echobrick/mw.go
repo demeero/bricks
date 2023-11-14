@@ -38,7 +38,7 @@ func SlogCtxMW(cfg LogCtxMWConfig) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
 			req := c.Request()
-			attrs := []slog.Attr{
+			attrs := []interface{}{
 				slog.String("http_path", c.Path()),
 				slog.String("http_method", req.Method),
 			}
@@ -57,7 +57,7 @@ func SlogCtxMW(cfg LogCtxMWConfig) echo.MiddlewareFunc {
 			if cfg.RequestID {
 				attrs = append(attrs, slog.String("http_req_id", c.Response().Header().Get(echo.HeaderXRequestID)))
 			}
-			reqLogger := slog.Default().With(attrs)
+			reqLogger := slog.Default().With(attrs...)
 			ctx := req.Context()
 			if cfg.Trace {
 				reqLogger = slogbrick.WithOTELTrace(ctx, reqLogger)

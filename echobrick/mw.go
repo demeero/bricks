@@ -260,25 +260,15 @@ func OTELMeterMW(cfg OTELMeterMWConfig) (echo.MiddlewareFunc, error) {
 	}, nil
 }
 
-type TokenMWConfig struct {
-	JWKSURL     string
-	KeyFuncOpts keyfunc.Options
-}
-
-type TokenClaims interface {
-	jwt.Claims
-	ToCtx(ctx context.Context) context.Context
-}
-
-func TokenMW(cfg TokenMWConfig, claims TokenClaims) echo.MiddlewareFunc {
+func TokenClaimsMW(jwksURL string, opts keyfunc.Options) echo.MiddlewareFunc {
 	var jwtKeyFunc jwt.Keyfunc = func(token *jwt.Token) (interface{}, error) {
 		return jwt.UnsafeAllowNoneSignatureType, nil
 	}
-	if cfg.JWKSURL != "" {
-		jwks, err := keyfunc.Get(cfg.JWKSURL, cfg.KeyFuncOpts)
+	if jwksURL != "" {
+		jwks, err := keyfunc.Get(jwksURL, opts)
 		if err != nil {
-			slog.Error("failed to create JWKS from resource at the given URL",
-				slog.Any("err", err), slog.String("jwks_url", cfg.JWKSURL))
+			slog.Error("failed create JWKS from resource at the given URL",
+				slog.Any("err", err), slog.String("jwks_url", jwksURL))
 		} else {
 			jwtKeyFunc = jwks.Keyfunc
 		}
@@ -289,17 +279,34 @@ func TokenMW(cfg TokenMWConfig, claims TokenClaims) echo.MiddlewareFunc {
 			if err != nil {
 				return echo.NewHTTPError(http.StatusUnauthorized, err)
 			}
-			tkn, err := jwt.ParseWithClaims(jwtToken, claims, jwtKeyFunc)
+			claims := jwt.MapClaims{}
+			tkn, err := jwt.ParseWithClaims(jwtToken, &claims, jwtKeyFunc)
 			if err != nil {
-				return echo.NewHTTPError(http.StatusUnauthorized, "failed to parse token")
+				return echo.NewHTTPError(http.StatusUnauthorized, "failed parse token")
 			}
 			if !tkn.Valid {
 				return echo.NewHTTPError(http.StatusUnauthorized, "invalid token")
 			}
-			c.SetRequest(c.Request().WithContext(claims.ToCtx(c.Request().Context())))
+			c.SetRequest(c.Request().WithContext(tokenClaimsToCtx(c.Request().Context(), claims)))
 			return next(c)
 		}
 	}
+}
+
+type jwtTokenClaimsKey struct{}
+
+var tknClaimsKey = jwtTokenClaimsKey{}
+
+func tokenClaimsToCtx(ctx context.Context, claims jwt.MapClaims) context.Context {
+	return context.WithValue(ctx, tknClaimsKey, claims)
+}
+
+func TokenClaimsFromCtx(ctx context.Context) jwt.MapClaims {
+	claims, ok := ctx.Value(tknClaimsKey).(jwt.MapClaims)
+	if !ok {
+		return jwt.MapClaims{}
+	}
+	return claims
 }
 
 // retrieveJWT returns the token string from the request.

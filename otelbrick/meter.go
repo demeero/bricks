@@ -18,15 +18,23 @@ type MeterConfig struct {
 	ServiceNamespace      string
 	DeploymentEnvironment string
 	OTELHTTPEndpoint      string
+	OTELHTTPPathPrefix    string
 	Insecure              bool
 	RuntimeMetrics        bool
 	HostMetrics           bool
+	Headers               map[string]string
 }
 
 func InitMeter(ctx context.Context, cfg MeterConfig) (func(ctx context.Context) error, error) {
 	otlpOpts := []otlpmetrichttp.Option{otlpmetrichttp.WithEndpoint(cfg.OTELHTTPEndpoint)}
+	if cfg.OTELHTTPPathPrefix != "" {
+		otlpOpts = append(otlpOpts, otlpmetrichttp.WithURLPath(cfg.OTELHTTPPathPrefix))
+	}
 	if cfg.Insecure {
 		otlpOpts = append(otlpOpts, otlpmetrichttp.WithInsecure())
+	}
+	if len(cfg.Headers) > 0 {
+		otlpOpts = append(otlpOpts, otlpmetrichttp.WithHeaders(cfg.Headers))
 	}
 	exp, err := otlpmetrichttp.New(ctx, otlpOpts...)
 	if err != nil {

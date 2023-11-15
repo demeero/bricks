@@ -20,7 +20,10 @@ func AttrsToCtx(ctx context.Context, attrs []attribute.KeyValue) context.Context
 
 // AttrsFromCtx returns the attributes from the context.
 func AttrsFromCtx(ctx context.Context) []attribute.KeyValue {
-	attrs, _ := ctx.Value(attrsKey).([]attribute.KeyValue)
+	attrs, ok := ctx.Value(attrsKey).([]attribute.KeyValue)
+	if !ok {
+		return nil
+	}
 	return attrs
 }
 

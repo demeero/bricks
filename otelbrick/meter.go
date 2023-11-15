@@ -14,6 +14,7 @@ import (
 )
 
 type MeterConfig struct {
+	Headers               map[string]string
 	ServiceName           string
 	ServiceNamespace      string
 	DeploymentEnvironment string
@@ -22,7 +23,6 @@ type MeterConfig struct {
 	Insecure              bool
 	RuntimeMetrics        bool
 	HostMetrics           bool
-	Headers               map[string]string
 }
 
 func InitMeter(ctx context.Context, cfg MeterConfig) (func(ctx context.Context) error, error) {

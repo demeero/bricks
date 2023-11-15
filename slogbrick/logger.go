@@ -14,14 +14,14 @@ var logKey = logCtxKey{}
 
 // Config is a configuration for slog logger.
 type Config struct {
+	// Fields are the fields to add to log ctx.
+	Fields map[string]string
 	// Level is the log level.
 	Level string
 	// AddSource adds source file and line number to log.
 	AddSource bool
 	// JSON enables JSON output.
 	JSON bool
-	// Fields are the fields to add to log ctx.
-	Fields map[string]string
 }
 
 // Configure configures slog logger.
@@ -67,6 +67,9 @@ func ToCtx(ctx context.Context, logger *slog.Logger) context.Context {
 	return context.WithValue(ctx, logKey, logger)
 }
 
+// WithOTELTrace adds OTEL trace info to slog logger.
+// This is useful when you want to add trace info to log output.
+// ctx has to be a context with OTEL trace info.
 func WithOTELTrace(ctx context.Context, logger *slog.Logger) *slog.Logger {
 	spanCtx := trace.SpanContextFromContext(ctx)
 	if spanCtx.HasSpanID() {

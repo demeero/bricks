@@ -15,6 +15,7 @@ import (
 )
 
 type TraceConfig struct {
+	Headers               map[string]string
 	ServiceName           string
 	ServiceNamespace      string
 	DeploymentEnvironment string
@@ -22,7 +23,6 @@ type TraceConfig struct {
 	OTELHTTPEndpoint      string
 	OTELHTTPPathPrefix    string
 	Insecure              bool
-	Headers               map[string]string
 }
 
 func InitTrace(ctx context.Context, cfg TraceConfig, opts ...sdktrace.TracerProviderOption) (func(context.Context) error, error) {

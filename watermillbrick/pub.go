@@ -21,9 +21,9 @@ type OTELPubConfig struct {
 }
 
 type OTELPublisher struct {
-	cfg               OTELPubConfig
 	pub               message.Publisher
 	evtPublishCounter metric.Int64Counter
+	cfg               OTELPubConfig
 }
 
 func NewOTELPublisher(cfg OTELPubConfig, pub message.Publisher) (*OTELPublisher, error) {

@@ -51,8 +51,8 @@ func (o SlogLogQueryObserver) ObserveQuery(ctx context.Context, q gocql.Observed
 }
 
 type OTELTraceQueryObserver struct {
-	Disabled bool
 	tracer   trace.Tracer
+	Disabled bool
 }
 
 func NewOTELTraceQueryObserver(disabled bool) *OTELTraceQueryObserver {
@@ -67,7 +67,7 @@ func (o *OTELTraceQueryObserver) ObserveQuery(ctx context.Context, q gocql.Obser
 	if o.Disabled {
 		return
 	}
-	ctx, span := o.tracer.Start(ctx, "cql-query", trace.WithTimestamp(q.Start.UTC()))
+	_, span := o.tracer.Start(ctx, "cql-query", trace.WithTimestamp(q.Start.UTC()))
 	span.SetAttributes(semconv.DBStatementKey.String(q.Statement),
 		semconv.DBSystemCassandra,
 		attribute.String("keyspace", q.Keyspace),
@@ -103,8 +103,8 @@ func newOTELQueryMetrics() (*otelQueryMetrics, error) {
 }
 
 type OTELMeterQueryObserver struct {
-	Disabled bool
 	qMeter   *otelQueryMetrics
+	Disabled bool
 }
 
 func NewOTELMeterQueryObserver(disabled bool) (*OTELMeterQueryObserver, error) {

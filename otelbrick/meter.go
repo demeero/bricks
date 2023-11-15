@@ -28,7 +28,7 @@ type MeterConfig struct {
 func InitMeter(ctx context.Context, cfg MeterConfig) (func(ctx context.Context) error, error) {
 	otlpOpts := []otlpmetrichttp.Option{otlpmetrichttp.WithEndpoint(cfg.OTELHTTPEndpoint)}
 	if cfg.OTELHTTPPathPrefix != "" {
-		otlpOpts = append(otlpOpts, otlpmetrichttp.WithURLPath(cfg.OTELHTTPPathPrefix))
+		otlpOpts = append(otlpOpts, otlpmetrichttp.WithURLPath(fmt.Sprintf("/%s/v1/metrics", cfg.OTELHTTPPathPrefix)))
 	}
 	if cfg.Insecure {
 		otlpOpts = append(otlpOpts, otlpmetrichttp.WithInsecure())

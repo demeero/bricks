@@ -20,7 +20,7 @@ type TraceConfig struct {
 	DeploymentEnvironment string
 	OTELGRPCEndpoint      string
 	OTELHTTPEndpoint      string
-	OTELHTTPEPathPrefix   string
+	OTELHTTPPathPrefix    string
 	Insecure              bool
 	Headers               map[string]string
 }
@@ -65,8 +65,8 @@ func createExporter(ctx context.Context, cfg TraceConfig) (*otlptrace.Exporter, 
 
 func createHTTPExporter(ctx context.Context, cfg TraceConfig) (*otlptrace.Exporter, error) {
 	traceOpts := []otlptracehttp.Option{otlptracehttp.WithEndpoint(cfg.OTELHTTPEndpoint)}
-	if cfg.OTELHTTPEPathPrefix != "" {
-		traceOpts = append(traceOpts, otlptracehttp.WithURLPath(fmt.Sprintf("/%s/v1/traces", cfg.OTELHTTPEPathPrefix)))
+	if cfg.OTELHTTPPathPrefix != "" {
+		traceOpts = append(traceOpts, otlptracehttp.WithURLPath(fmt.Sprintf("/%s/v1/traces", cfg.OTELHTTPPathPrefix)))
 	}
 	if cfg.Insecure {
 		traceOpts = append(traceOpts, otlptracehttp.WithInsecure())

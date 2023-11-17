@@ -20,6 +20,7 @@ import (
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/metric"
+	semconv "go.opentelemetry.io/otel/semconv/v1.21.0"
 )
 
 type LogCtxMWConfig struct {
@@ -123,61 +124,73 @@ type OTELMeterMWConfig struct {
 
 type OTELMeterAttrsConfig struct {
 	Method       bool
+	Route        bool
 	Path         bool
-	URI          bool
 	Status       bool
 	AttrsFromCtx bool
 	AttrsToCtx   bool
 }
 
 type OTELMeterMetricsConfig struct {
-	LatencyHist  bool
-	ReqCounter   bool
-	ReqSizeHist  bool
-	RespSizeHist bool
+	ReqDuration       bool
+	ReqCounter        bool
+	ActiveReqsCounter bool
+	ReqSize           bool
+	RespSize          bool
 }
 
 type httpOTELMetrics struct {
-	srvLatencyHist  metric.Int64Histogram
-	srvReqCounter   metric.Int64Counter
-	srvReqSizeHist  metric.Int64Histogram
-	srvRespSizeHist metric.Int64Histogram
+	reqDurationHist   metric.Int64Histogram
+	reqCounter        metric.Int64Counter
+	reqSizeHist       metric.Int64Histogram
+	respSizeHist      metric.Int64Histogram
+	activeReqsCounter metric.Int64UpDownCounter
 }
 
 func newHTTPOTELMetrics(cfg *OTELMeterMetricsConfig) (*httpOTELMetrics, error) {
 	httpMeter := otel.GetMeterProvider().Meter("brick/echobrick/OTELMeter")
 	result := &httpOTELMetrics{}
-	if cfg.LatencyHist {
-		srvLatencyHist, err := httpMeter.Int64Histogram("http_server_latency",
-			metric.WithDescription("The latency of HTTP requests"), metric.WithUnit("ms"))
+	if cfg.ActiveReqsCounter {
+		activeReqsCounter, err := httpMeter.Int64UpDownCounter("http.server.active_requests",
+			metric.WithDescription("Number of active HTTP server requests."))
 		if err != nil {
-			return nil, fmt.Errorf("failed create http_server_latency metric: %w", err)
+			return nil, fmt.Errorf("failed create http.server.active_requests metric: %w", err)
 		}
-		result.srvLatencyHist = srvLatencyHist
+		result.activeReqsCounter = activeReqsCounter
+	}
+	if cfg.ReqDuration {
+		srvLatencyHist, err := httpMeter.Int64Histogram("http.server.request.duration",
+			metric.WithDescription("Duration of HTTP server requests."),
+			metric.WithUnit("ms"),
+			metric.WithExplicitBucketBoundaries(0.005, 0.01, 0.025, 0.05, 0.075, 0.1, 0.25, 0.5, 0.75, 1, 2.5, 5, 7.5, 10))
+		if err != nil {
+			return nil, fmt.Errorf("failed create http.server.request.duration metric: %w", err)
+		}
+		result.reqDurationHist = srvLatencyHist
 	}
 	if cfg.ReqCounter {
-		srvReqCounter, err := httpMeter.Int64Counter("http_server_request_count",
+		srvReqCounter, err := httpMeter.Int64Counter("http.server.request.count",
 			metric.WithDescription("The number of HTTP requests"))
 		if err != nil {
-			return nil, fmt.Errorf("failed create http_server_request_count metric: %w", err)
+			return nil, fmt.Errorf("failed create http.server.request.count metric: %w", err)
 		}
-		result.srvReqCounter = srvReqCounter
+		result.reqCounter = srvReqCounter
 	}
-	if cfg.ReqSizeHist {
-		srvReqSizeHist, err := httpMeter.Int64Histogram("http_server_request_size",
-			metric.WithDescription("The size of HTTP requests"), metric.WithUnit("B"))
+	if cfg.ReqSize {
+		srvReqSizeHist, err := httpMeter.Int64Histogram("http.server.request.body.size",
+			metric.WithDescription("The size of the request payload body in bytes."), metric.WithUnit("By"))
 		if err != nil {
-			return nil, fmt.Errorf("failed create http_server_request_size metric: %w", err)
+			return nil, fmt.Errorf("failed create http.server.request.body.size metric: %w", err)
 		}
-		result.srvReqSizeHist = srvReqSizeHist
+		result.reqSizeHist = srvReqSizeHist
 	}
-	if cfg.RespSizeHist {
-		srvRespSizeHist, err := httpMeter.Int64Histogram("http_server_req_size",
-			metric.WithDescription("The size of HTTP responses"), metric.WithUnit("B"))
+	if cfg.RespSize {
+		srvRespSizeHist, err := httpMeter.Int64Histogram("http.server.response.body.size",
+			metric.WithDescription("Size of HTTP server response bodies."), metric.WithUnit("By"))
 		if err != nil {
-			return nil, fmt.Errorf("failed create http_server_response_size metric: %w", err)
+			return nil, fmt.Errorf("failed create http.server.response.body.size metric: %w", err)
 		}
-		result.srvRespSizeHist = srvRespSizeHist
+		result.respSizeHist = srvRespSizeHist
 	}
 	return result, nil
 }
@@ -189,17 +202,18 @@ func OTELMeterMW(cfg OTELMeterMWConfig) (echo.MiddlewareFunc, error) {
 	if cfg.Attrs == nil {
 		cfg.Attrs = &OTELMeterAttrsConfig{
 			Method:     true,
-			Path:       true,
+			Route:      true,
 			Status:     true,
 			AttrsToCtx: true,
 		}
 	}
 	if cfg.Metrics == nil {
 		cfg.Metrics = &OTELMeterMetricsConfig{
-			LatencyHist:  true,
-			ReqCounter:   true,
-			ReqSizeHist:  true,
-			RespSizeHist: true,
+			ReqDuration:       true,
+			ReqCounter:        true,
+			ReqSize:           true,
+			RespSize:          true,
+			ActiveReqsCounter: true,
 		}
 	}
 	httpMeter, err := newHTTPOTELMetrics(cfg.Metrics)
@@ -208,22 +222,26 @@ func OTELMeterMW(cfg OTELMeterMWConfig) (echo.MiddlewareFunc, error) {
 	}
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
-			start := time.Now().UTC()
+			if cfg.Metrics.ActiveReqsCounter {
+				httpMeter.activeReqsCounter.Add(c.Request().Context(), 1)
+				defer httpMeter.activeReqsCounter.Add(c.Request().Context(), -1)
+			}
 
+			start := time.Now().UTC()
 			var reqSz int64
-			if cfg.Metrics.ReqSizeHist {
+			if cfg.Metrics.ReqSize {
 				reqSz = httpbrick.ComputeApproximateRequestSize(c.Request())
 			}
 
 			var attrs []attribute.KeyValue
 			if cfg.Attrs.Method {
-				attrs = append(attrs, attribute.String("method", c.Request().Method))
+				attrs = append(attrs, semconv.HTTPRequestMethodKey.String(c.Request().Method))
+			}
+			if cfg.Attrs.Route {
+				attrs = append(attrs, semconv.HTTPRoute(c.Path()))
 			}
 			if cfg.Attrs.Path {
-				attrs = append(attrs, attribute.String("path", c.Path()))
-			}
-			if cfg.Attrs.URI {
-				attrs = append(attrs, attribute.String("uri", c.Request().RequestURI))
+				attrs = append(attrs, semconv.URLPathKey.String(c.Request().RequestURI))
 			}
 			if cfg.Attrs.AttrsFromCtx {
 				attrs = append(attrs, otelbrick.AttrsFromCtx(c.Request().Context())...)
@@ -239,22 +257,22 @@ func OTELMeterMW(cfg OTELMeterMWConfig) (echo.MiddlewareFunc, error) {
 			}
 
 			if cfg.Attrs.Status {
-				attrs = append(attrs, attribute.Int("status", c.Response().Status))
+				attrs = append(attrs, semconv.HTTPResponseStatusCode(c.Response().Status))
 			}
 
 			ctx := c.Request().Context()
 
 			if cfg.Metrics.ReqCounter {
-				httpMeter.srvReqCounter.Add(ctx, 1, metric.WithAttributes(attrs...))
+				httpMeter.reqCounter.Add(ctx, 1, metric.WithAttributes(attrs...))
 			}
-			if cfg.Metrics.LatencyHist {
-				httpMeter.srvLatencyHist.Record(ctx, time.Since(start).Milliseconds(), metric.WithAttributes(attrs...))
+			if cfg.Metrics.ReqDuration {
+				httpMeter.reqDurationHist.Record(ctx, time.Since(start).Milliseconds(), metric.WithAttributes(attrs...))
 			}
-			if cfg.Metrics.ReqSizeHist {
-				httpMeter.srvReqSizeHist.Record(ctx, reqSz, metric.WithAttributes(attrs...))
+			if cfg.Metrics.ReqSize {
+				httpMeter.reqSizeHist.Record(ctx, reqSz, metric.WithAttributes(attrs...))
 			}
-			if cfg.Metrics.RespSizeHist {
-				httpMeter.srvRespSizeHist.Record(ctx, c.Response().Size, metric.WithAttributes(attrs...))
+			if cfg.Metrics.RespSize {
+				httpMeter.respSizeHist.Record(ctx, c.Response().Size, metric.WithAttributes(attrs...))
 			}
 
 			return err

@@ -43,7 +43,7 @@ type HTTP struct {
 	ReadHeaderTimeout time.Duration `default:"10s" split_words:"true" json:"read_header_timeout"`
 	ReadTimeout       time.Duration `default:"30s" split_words:"true" json:"read_timeout"`
 	WriteTimeout      time.Duration `default:"30s" split_words:"true" json:"write_timeout"`
-	Port              int           `default:"8088" json:"port"`
+	Port              int           `default:"8080" json:"port"`
 	ShutdownTimeout   time.Duration `default:"10s" split_words:"true" json:"shutdown_timeout"`
 	AccessLog         bool          `split_words:"true" json:"access_log"`
 }
@@ -92,13 +92,13 @@ type OTLP struct {
 	// Endpoint is the target to which the exporter is going to send data.
 	Endpoint string `json:"endpoint"`
 	// PathPrefix is the path prefix to use for HTTP requests.
-	PathPrefix string `json:"path_prefix"`
+	PathPrefix string `json:"path_prefix" split_words:"true"`
 	// Username is the username to use for HTTP Basic Auth.
 	Username string `json:"-"`
 	// Password is the password to use for HTTP Basic Auth.
 	Password string `json:"-"`
 	// Enabled indicates if the exporter is enabled.
-	Enabled bool `json:"enabled"`
+	Enabled bool `default:"true" json:"enabled"`
 	// Insecure indicates if the exporter should skip TLS verification.
 	Insecure bool `json:"insecure"`
 }

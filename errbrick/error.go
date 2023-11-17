@@ -48,6 +48,9 @@ var errList = []error{
 }
 
 func IsOneOf(err error, errs ...error) bool {
+	if err == nil {
+		return false
+	}
 	if len(errs) == 0 {
 		errs = append(errs, errList...)
 	}

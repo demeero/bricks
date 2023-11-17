@@ -8,6 +8,7 @@ require (
 	github.com/dentech-floss/watermill-opentelemetry-go-extra v0.1.0
 	github.com/gocql/gocql v1.6.0
 	github.com/golang-jwt/jwt/v5 v5.1.0
+	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/labstack/echo/v4 v4.11.3
 	github.com/stretchr/testify v1.8.4
 	github.com/voi-oss/watermill-opentelemetry v0.1.3

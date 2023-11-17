@@ -2,9 +2,26 @@ package configbrick
 
 import (
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
+	"log/slog"
 	"time"
+
+	"github.com/kelseyhightower/envconfig"
 )
+
+func LoadConfig(cfg any, log bool) {
+	envconfig.MustProcess("", cfg)
+	if !log {
+		return
+	}
+	b, err := json.Marshal(cfg)
+	if err != nil {
+		slog.Error("failed marshal config", slog.Any("err", err))
+		return
+	}
+	slog.Info("parsed config", slog.String("config", string(b)))
+}
 
 // AppMeta represents the application metadata.
 type AppMeta struct {

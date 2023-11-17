@@ -38,3 +38,23 @@ var (
 	// and the caller can check for it with errors.Is(err, errbrick.ErrUnauthorized).
 	ErrUnauthorized = errors.New("unauthorized")
 )
+
+var errList = []error{
+	ErrInvalidData,
+	ErrNotFound,
+	ErrConflict,
+	ErrForbidden,
+	ErrUnauthorized,
+}
+
+func IsOneOf(err error, errs ...error) bool {
+	if len(errs) == 0 {
+		errs = append(errs, errList...)
+	}
+	for _, e := range errs {
+		if errors.Is(err, e) {
+			return true
+		}
+	}
+	return false
+}

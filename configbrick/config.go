@@ -76,7 +76,9 @@ type MongoLog struct {
 // Cassandra represents the Cassandra configuration.
 type Cassandra struct {
 	Host     string `default:"localhost:9042" json:"host"`
-	Keyspace string `default:"chat" json:"keyspace"`
+	Keyspace string `json:"keyspace"`
+	Username string `json:"-"`
+	Password string `json:"-"`
 	Log      bool   `json:"log"`
 }
 

@@ -48,6 +48,12 @@ type HTTP struct {
 	AccessLog         bool          `split_words:"true" json:"access_log"`
 }
 
+// GRPC represents the gRPC server configuration.
+type GRPC struct {
+	Port             int  `required:"true" json:"port"`
+	EnableReflection bool `default:"true" split_words:"true" json:"enable_reflection"`
+}
+
 // Redis represents the Redis configuration.
 type Redis struct {
 	Addr     string `default:"localhost:6379" json:"addr"`

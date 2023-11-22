@@ -51,8 +51,8 @@ type HTTP struct {
 // GRPC represents the gRPC server configuration.
 type GRPC struct {
 	AccessLogLevel   string `default:"debug" split_words:"true" json:"access_log_level"`
-	AccessLog        bool   `split_words:"true" json:"access_log"`
 	Port             int    `required:"true" json:"port"`
+	AccessLog        bool   `split_words:"true" json:"access_log"`
 	EnableReflection bool   `default:"true" split_words:"true" json:"enable_reflection"`
 }
 

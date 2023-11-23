@@ -4,8 +4,10 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"regexp"
 
 	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp"
@@ -17,6 +19,7 @@ import (
 )
 
 type TraceConfig struct {
+	SpanExclusions        map[attribute.Key]*regexp.Regexp
 	Headers               map[string]string
 	ServiceName           string
 	ServiceNamespace      string
@@ -39,11 +42,14 @@ func InitTrace(ctx context.Context, cfg TraceConfig, opts ...sdktrace.TracerProv
 		return nil, fmt.Errorf("failed create trace exporter: %w", err)
 	}
 
-	bsp := sdktrace.NewBatchSpanProcessor(traceExporter)
+	sp := sdktrace.NewBatchSpanProcessor(traceExporter)
+	if len(cfg.SpanExclusions) > 0 {
+		sp = newExclusionSpanProcessor(sp, cfg.SpanExclusions)
+	}
 	opts = append([]sdktrace.TracerProviderOption{
 		sdktrace.WithSampler(sdktrace.AlwaysSample()),
 		sdktrace.WithResource(createRes(cfg)),
-		sdktrace.WithSpanProcessor(bsp),
+		sdktrace.WithSpanProcessor(sp),
 	}, opts...)
 	tracerProvider := sdktrace.NewTracerProvider(opts...)
 	otel.SetTracerProvider(tracerProvider)
@@ -85,4 +91,30 @@ func createHTTPExporter(ctx context.Context, cfg TraceConfig) (*otlptrace.Export
 		traceOpts = append(traceOpts, otlptracehttp.WithHeaders(cfg.Headers))
 	}
 	return otlptracehttp.New(ctx, traceOpts...)
+}
+
+type exclusionSpanProcessor struct {
+	sdktrace.SpanProcessor
+	exclusions map[attribute.Key]*regexp.Regexp
+}
+
+func newExclusionSpanProcessor(next sdktrace.SpanProcessor, exclusions map[attribute.Key]*regexp.Regexp) *exclusionSpanProcessor {
+	return &exclusionSpanProcessor{SpanProcessor: next, exclusions: exclusions}
+}
+
+func (sp *exclusionSpanProcessor) OnEnd(s sdktrace.ReadOnlySpan) {
+	if !sp.exclude(s) {
+		sp.SpanProcessor.OnEnd(s)
+	}
+}
+
+func (sp *exclusionSpanProcessor) exclude(s sdktrace.ReadOnlySpan) bool {
+	for key, matcher := range sp.exclusions {
+		for _, keyValue := range s.Attributes() {
+			if key == keyValue.Key && matcher.MatchString(keyValue.Value.AsString()) {
+				return true
+			}
+		}
+	}
+	return false
 }

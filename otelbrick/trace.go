@@ -60,7 +60,6 @@ func InitTrace(ctx context.Context, cfg TraceConfig, opts ...sdktrace.TracerProv
 	}, opts...)
 	tracerProvider := sdktrace.NewTracerProvider(opts...)
 	otel.SetTracerProvider(tracerProvider)
-
 	otel.SetTextMapPropagator(propagation.TraceContext{})
 
 	return tracerProvider.Shutdown, nil
@@ -118,11 +117,16 @@ func (sp *exclusionSpanProcessor) OnEnd(s sdktrace.ReadOnlySpan) {
 func (sp *exclusionSpanProcessor) exclude(s sdktrace.ReadOnlySpan) bool {
 	for key, matcher := range sp.exclusions {
 		for _, keyValue := range s.Attributes() {
+			slog.Debug("span attribute", slog.String("key", string(keyValue.Key)), slog.String("value", keyValue.Value.AsString()))
+			slog.Debug("exclusion_key", slog.String("key", string(key)))
+			slog.Debug("matching", slog.Any("val", matcher.MatchString(keyValue.Value.AsString())))
 			if key == keyValue.Key && matcher.MatchString(keyValue.Value.AsString()) {
-				slog.Debug("span excluded", "span", s.Name(), "key", key, "value", keyValue.Value.AsString())
+				slog.Debug("span excluded",
+					slog.String("span", s.Name()), slog.String("key", string(key)), slog.String("value", keyValue.Value.AsString()))
 				return true
 			}
 		}
 	}
+	slog.Debug("span not excluded", slog.String("span", s.Name()), slog.Any("attributes", s.Attributes()))
 	return false
 }

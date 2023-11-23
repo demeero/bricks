@@ -5,9 +5,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"log/slog"
+	"regexp"
 	"time"
 
 	"github.com/kelseyhightower/envconfig"
+	"go.opentelemetry.io/otel/attribute"
 )
 
 func LoadConfig(cfg any, log bool) {
@@ -111,6 +113,8 @@ type OTLP struct {
 	Enabled bool `default:"true" json:"enabled"`
 	// Insecure indicates if the exporter should skip TLS verification.
 	Insecure bool `json:"insecure"`
+	// Exclusions entries that have a key that matches the key of an entry in this map will be excluded from the export.
+	Exclusions map[attribute.Key]*regexp.Regexp
 }
 
 // BasicAuthHeader returns the HTTP Basic Auth header.

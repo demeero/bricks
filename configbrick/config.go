@@ -101,26 +101,27 @@ type OTEL struct {
 }
 
 type OTLP struct {
-	// Endpoint is the target to which the exporter is going to send data.
-	Endpoint string `json:"endpoint"`
-	// PathPrefix is the path prefix to use for HTTP requests.
-	PathPrefix string `json:"path_prefix" split_words:"true"`
-	// Username is the username to use for HTTP Basic Auth.
-	Username string `json:"-"`
-	// Password is the password to use for HTTP Basic Auth.
-	Password string `json:"-"`
-	// Enabled indicates if the exporter is enabled.
-	Enabled bool `default:"true" json:"enabled"`
-	// Insecure indicates if the exporter should skip TLS verification.
-	Insecure bool `json:"insecure"`
-	// Exclusions entries that have a key that matches the key of an entry in this map will be excluded from the export.
-	Exclusions map[attribute.Key]*regexp.Regexp `json:"exclusions"`
+	Exclusions map[attribute.Key]string `json:"exclusions"`
+	Endpoint   string                   `json:"endpoint"`
+	PathPrefix string                   `json:"path_prefix" split_words:"true"`
+	Username   string                   `json:"-"`
+	Password   string                   `json:"-"`
+	Enabled    bool                     `default:"true" json:"enabled"`
+	Insecure   bool                     `json:"insecure"`
 }
 
 // BasicAuthHeader returns the HTTP Basic Auth header.
 func (cfg OTLP) BasicAuthHeader() map[string]string {
 	auth := base64.StdEncoding.EncodeToString([]byte(fmt.Sprintf("%s:%s", cfg.Username, cfg.Password)))
 	return map[string]string{"Authorization": "Basic " + auth}
+}
+
+func (cfg OTLP) FormattedExclusions() map[attribute.Key]*regexp.Regexp {
+	exclusions := make(map[attribute.Key]*regexp.Regexp, len(cfg.Exclusions))
+	for key, value := range cfg.Exclusions {
+		exclusions[key] = regexp.MustCompile(value)
+	}
+	return exclusions
 }
 
 // UserPassword represents the user password configuration.

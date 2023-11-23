@@ -93,7 +93,6 @@ func (r *exclusionReader) Collect(ctx context.Context, rm *metricdata.ResourceMe
 		return nil
 	}
 	return r.Reader.Collect(ctx, rm)
-
 }
 
 func (r *exclusionReader) exclude(res *resource.Resource) bool {

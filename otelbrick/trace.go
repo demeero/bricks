@@ -119,7 +119,6 @@ func (sp *exclusionSpanProcessor) exclude(s sdktrace.ReadOnlySpan) bool {
 	for key, matcher := range sp.exclusions {
 		for _, keyValue := range s.Attributes() {
 			if key == keyValue.Key && matcher.MatchString(keyValue.Value.AsString()) {
-				slog.Debug("span excluded", "span", s.Name(), "key", key, "value", keyValue.Value.AsString())
 				return true
 			}
 		}

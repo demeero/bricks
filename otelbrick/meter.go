@@ -4,18 +4,22 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"regexp"
 
 	"go.opentelemetry.io/contrib/instrumentation/host"
 	"go.opentelemetry.io/contrib/instrumentation/runtime"
 	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetrichttp"
 	noopmetric "go.opentelemetry.io/otel/metric/noop"
 	"go.opentelemetry.io/otel/sdk/metric"
+	"go.opentelemetry.io/otel/sdk/metric/metricdata"
 	"go.opentelemetry.io/otel/sdk/resource"
 	semconv "go.opentelemetry.io/otel/semconv/v1.21.0"
 )
 
 type MeterConfig struct {
+	Exclusions            map[attribute.Key]*regexp.Regexp
 	Headers               map[string]string
 	ServiceName           string
 	ServiceNamespace      string
@@ -53,7 +57,11 @@ func InitMeter(ctx context.Context, cfg MeterConfig) (func(ctx context.Context) 
 		semconv.ServiceNamespace(cfg.ServiceNamespace),
 		semconv.DeploymentEnvironment(cfg.DeploymentEnvironment),
 	)
-	meterProvider := metric.NewMeterProvider(metric.WithResource(res), metric.WithReader(metric.NewPeriodicReader(exp)))
+	var reader metric.Reader = metric.NewPeriodicReader(exp)
+	if len(cfg.Exclusions) > 0 {
+		reader = newExclusionReader(reader, cfg.Exclusions)
+	}
+	meterProvider := metric.NewMeterProvider(metric.WithResource(res), metric.WithReader(reader))
 	if cfg.HostMetrics {
 		if err := host.Start(host.WithMeterProvider(meterProvider)); err != nil {
 			return nil, fmt.Errorf("failed start host metrics: %w", err)
@@ -66,4 +74,35 @@ func InitMeter(ctx context.Context, cfg MeterConfig) (func(ctx context.Context) 
 	}
 	otel.SetMeterProvider(meterProvider)
 	return meterProvider.Shutdown, nil
+}
+
+type exclusionReader struct {
+	metric.Reader
+	exclusions map[attribute.Key]*regexp.Regexp
+}
+
+func newExclusionReader(r metric.Reader, exclusions map[attribute.Key]*regexp.Regexp) *exclusionReader {
+	return &exclusionReader{
+		Reader:     r,
+		exclusions: exclusions,
+	}
+}
+
+func (r *exclusionReader) Collect(ctx context.Context, rm *metricdata.ResourceMetrics) error {
+	if r.exclude(rm.Resource) {
+		return nil
+	}
+	return r.Reader.Collect(ctx, rm)
+
+}
+
+func (r *exclusionReader) exclude(res *resource.Resource) bool {
+	for key, matcher := range r.exclusions {
+		for _, keyValue := range res.Attributes() {
+			if key == keyValue.Key && matcher.MatchString(keyValue.Value.AsString()) {
+				return true
+			}
+		}
+	}
+	return false
 }

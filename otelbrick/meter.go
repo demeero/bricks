@@ -3,11 +3,13 @@ package otelbrick
 import (
 	"context"
 	"fmt"
+	"log/slog"
 
 	"go.opentelemetry.io/contrib/instrumentation/host"
 	"go.opentelemetry.io/contrib/instrumentation/runtime"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetrichttp"
+	noopmetric "go.opentelemetry.io/otel/metric/noop"
 	"go.opentelemetry.io/otel/sdk/metric"
 	"go.opentelemetry.io/otel/sdk/resource"
 	semconv "go.opentelemetry.io/otel/semconv/v1.21.0"
@@ -26,6 +28,11 @@ type MeterConfig struct {
 }
 
 func InitMeter(ctx context.Context, cfg MeterConfig) (func(ctx context.Context) error, error) {
+	if cfg.OTELHTTPEndpoint == "" {
+		slog.Info("otel meter disabled")
+		otel.SetMeterProvider(noopmetric.NewMeterProvider())
+		return func(context.Context) error { return nil }, nil
+	}
 	otlpOpts := []otlpmetrichttp.Option{otlpmetrichttp.WithEndpoint(cfg.OTELHTTPEndpoint)}
 	if cfg.OTELHTTPPathPrefix != "" {
 		otlpOpts = append(otlpOpts, otlpmetrichttp.WithURLPath(fmt.Sprintf("/%s/v1/metrics", cfg.OTELHTTPPathPrefix)))

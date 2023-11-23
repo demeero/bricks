@@ -3,6 +3,7 @@ package otelbrick
 import (
 	"context"
 	"fmt"
+	"log/slog"
 
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace"
@@ -12,6 +13,7 @@ import (
 	"go.opentelemetry.io/otel/sdk/resource"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	semconv "go.opentelemetry.io/otel/semconv/v1.21.0"
+	nooptrace "go.opentelemetry.io/otel/trace/noop"
 )
 
 type TraceConfig struct {
@@ -26,22 +28,21 @@ type TraceConfig struct {
 }
 
 func InitTrace(ctx context.Context, cfg TraceConfig, opts ...sdktrace.TracerProviderOption) (func(context.Context) error, error) {
+	if cfg.OTELHTTPEndpoint == "" && cfg.OTELGRPCEndpoint == "" {
+		slog.Info("otel trace disabled")
+		otel.SetTracerProvider(nooptrace.NewTracerProvider())
+		return func(context.Context) error { return nil }, nil
+	}
+
 	traceExporter, err := createExporter(ctx, cfg)
 	if err != nil {
 		return nil, fmt.Errorf("failed create trace exporter: %w", err)
 	}
 
-	res := resource.NewWithAttributes(
-		semconv.SchemaURL,
-		semconv.ServiceName(cfg.ServiceName),
-		semconv.ServiceNamespace(cfg.ServiceNamespace),
-		semconv.DeploymentEnvironment(cfg.DeploymentEnvironment),
-	)
-
 	bsp := sdktrace.NewBatchSpanProcessor(traceExporter)
 	opts = append([]sdktrace.TracerProviderOption{
 		sdktrace.WithSampler(sdktrace.AlwaysSample()),
-		sdktrace.WithResource(res),
+		sdktrace.WithResource(createRes(cfg)),
 		sdktrace.WithSpanProcessor(bsp),
 	}, opts...)
 	tracerProvider := sdktrace.NewTracerProvider(opts...)
@@ -50,6 +51,15 @@ func InitTrace(ctx context.Context, cfg TraceConfig, opts ...sdktrace.TracerProv
 	otel.SetTextMapPropagator(propagation.TraceContext{})
 
 	return tracerProvider.Shutdown, nil
+}
+
+func createRes(cfg TraceConfig) *resource.Resource {
+	return resource.NewWithAttributes(
+		semconv.SchemaURL,
+		semconv.ServiceName(cfg.ServiceName),
+		semconv.ServiceNamespace(cfg.ServiceNamespace),
+		semconv.DeploymentEnvironment(cfg.DeploymentEnvironment),
+	)
 }
 
 func createExporter(ctx context.Context, cfg TraceConfig) (*otlptrace.Exporter, error) {

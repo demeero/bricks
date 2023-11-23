@@ -27,6 +27,7 @@ type TraceConfig struct {
 	OTELGRPCEndpoint      string
 	OTELHTTPEndpoint      string
 	OTELHTTPPathPrefix    string
+	SamplingRate          float64
 	Insecure              bool
 }
 
@@ -44,10 +45,16 @@ func InitTrace(ctx context.Context, cfg TraceConfig, opts ...sdktrace.TracerProv
 
 	sp := sdktrace.NewBatchSpanProcessor(traceExporter)
 	if len(cfg.SpanExclusions) > 0 {
+		slog.Info("span exclusions enabled")
 		sp = newExclusionSpanProcessor(sp, cfg.SpanExclusions)
 	}
+	sampler := sdktrace.AlwaysSample()
+	if cfg.SamplingRate > 0 {
+		slog.Info("span sampling enabled")
+		sampler = sdktrace.TraceIDRatioBased(cfg.SamplingRate)
+	}
 	opts = append([]sdktrace.TracerProviderOption{
-		sdktrace.WithSampler(sdktrace.AlwaysSample()),
+		sdktrace.WithSampler(sdktrace.ParentBased(sampler)),
 		sdktrace.WithResource(createRes(cfg)),
 		sdktrace.WithSpanProcessor(sp),
 	}, opts...)
@@ -112,6 +119,7 @@ func (sp *exclusionSpanProcessor) exclude(s sdktrace.ReadOnlySpan) bool {
 	for key, matcher := range sp.exclusions {
 		for _, keyValue := range s.Attributes() {
 			if key == keyValue.Key && matcher.MatchString(keyValue.Value.AsString()) {
+				slog.Debug("span excluded", "span", s.Name(), "key", key, "value", keyValue.Value.AsString())
 				return true
 			}
 		}

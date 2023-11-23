@@ -114,7 +114,7 @@ type OTLP struct {
 	// Insecure indicates if the exporter should skip TLS verification.
 	Insecure bool `json:"insecure"`
 	// Exclusions entries that have a key that matches the key of an entry in this map will be excluded from the export.
-	Exclusions map[attribute.Key]*regexp.Regexp
+	Exclusions map[attribute.Key]*regexp.Regexp `json:"exclusions"`
 }
 
 // BasicAuthHeader returns the HTTP Basic Auth header.

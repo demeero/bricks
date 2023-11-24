@@ -198,7 +198,7 @@ func newHTTPOTELMetrics(cfg *OTELMeterMetricsConfig) (*httpOTELMetrics, error) {
 // OTELMeterMW is a middleware that records metrics for each request.
 //
 //nolint:gocognit,gocyclo,cyclop // it's ok to be cyclomatic for this func
-func OTELMeterMW(cfg OTELMeterMWConfig) (echo.MiddlewareFunc, error) {
+func OTELMeterMW(cfg OTELMeterMWConfig, skipper echomw.Skipper) (echo.MiddlewareFunc, error) {
 	if cfg.Attrs == nil {
 		cfg.Attrs = &OTELMeterAttrsConfig{
 			Method:     true,
@@ -222,6 +222,9 @@ func OTELMeterMW(cfg OTELMeterMWConfig) (echo.MiddlewareFunc, error) {
 	}
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
+			if skipper != nil && skipper(c) {
+				return next(c)
+			}
 			if cfg.Metrics.ActiveReqsCounter {
 				httpMeter.activeReqsCounter.Add(c.Request().Context(), 1)
 				defer httpMeter.activeReqsCounter.Add(c.Request().Context(), -1)

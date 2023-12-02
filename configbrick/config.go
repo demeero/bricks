@@ -126,9 +126,9 @@ func (cfg OTLP) FormattedExclusions() map[attribute.Key]*regexp.Regexp {
 }
 
 type PyroscopeProfiler struct {
-	Enabled       bool              `json:"enabled"`
-	ServerAddress string            `split_words:"true" json:"server_address"`
 	Tags          map[string]string `json:"tags"`
+	ServerAddress string            `split_words:"true" json:"server_address"`
+	Enabled       bool              `json:"enabled"`
 }
 
 // UserPassword represents the user password configuration.

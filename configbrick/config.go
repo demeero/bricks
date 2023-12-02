@@ -30,6 +30,7 @@ type AppMeta struct {
 	Env              string `default:"local" json:"env"`
 	ServiceName      string `default:"unknown-service-name" split_words:"true" json:"service_name"`
 	ServiceNamespace string `default:"unknown-service-namespace" split_words:"true" json:"service_namespace"`
+	Version          string `json:"version"`
 }
 
 // Log represents the log configuration.
@@ -122,6 +123,12 @@ func (cfg OTLP) FormattedExclusions() map[attribute.Key]*regexp.Regexp {
 		exclusions[key] = regexp.MustCompile(value)
 	}
 	return exclusions
+}
+
+type PyroscopeProfiler struct {
+	Enabled       bool              `json:"enabled"`
+	ServerAddress string            `split_words:"true" json:"server_address"`
+	Tags          map[string]string `json:"tags"`
 }
 
 // UserPassword represents the user password configuration.

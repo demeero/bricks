@@ -35,9 +35,12 @@ type AppMeta struct {
 
 // Log represents the log configuration.
 type Log struct {
-	Level     string `default:"debug" json:"level"`
-	AddSource bool   `split_words:"true" json:"add_source"`
-	JSON      bool   `json:"json"`
+	// Level is the log level.
+	Level string `default:"debug" json:"level"`
+	// AddSource adds source file and line number to log.
+	AddSource bool `split_words:"true" json:"add_source"`
+	// JSON enables JSON output.
+	JSON bool `json:"json"`
 }
 
 // HTTP represents the HTTP server configuration.

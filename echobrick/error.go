@@ -10,6 +10,7 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
+// ErrorHandler is a custom error handler for echo that uses errors from errbrick pkg.
 func ErrorHandler(err error, c echo.Context) {
 	if c.Response().Committed {
 		return

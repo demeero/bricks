@@ -2,6 +2,7 @@ package httpbrick
 
 import "net/http"
 
+// ComputeApproximateRequestSize computes the approximate size of an HTTP request in bytes.
 func ComputeApproximateRequestSize(r *http.Request) int64 {
 	s := 0
 	if r.URL != nil {

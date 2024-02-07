@@ -24,19 +24,19 @@ var (
 	// and the caller can check for it with errors.Is(err, errbrick.ErrConflict).
 	ErrConflict = errors.New("conflict")
 
-	// ErrForbidden is a generic error that should be used when the subject is not authorized to perform the requested action.
+	// ErrForbidden is a generic error that should be used when the subject is not correctly authorized.
 	// It should be used with a more specific error message.
-	// Example: fmt.Errorf("%w: %s", errbrick.ErrForbidden, "invalid token")
-	// So, the error message will be: "forbidden: invalid token", the error type will be errbrick.ErrForbidden
+	// Example: fmt.Errorf("%w: %s", errbrick.ErrForbidden, "only admins can modify the data")
+	// So, the error message will be: "forbidden: only admins can modify the data", the error type will be errbrick.ErrForbidden
 	// and the caller can check for it with errors.Is(err, errbrick.ErrForbidden).
 	ErrForbidden = errors.New("forbidden")
 
-	// ErrUnauthorized is a generic error that should be used when the subject is not correctly authorized.
+	// ErrUnauthenticated is a generic error that should be used when the subject is not authenticated.
 	// It should be used with a more specific error message.
-	// Example: fmt.Errorf("%w: %s", errbrick.ErrUnauthorized, "only admins can modify the data")
-	// So, the error message will be: "unauthorized: only admins can modify the data", the error type will be errbrick.ErrUnauthorized
-	// and the caller can check for it with errors.Is(err, errbrick.ErrUnauthorized).
-	ErrUnauthorized = errors.New("unauthorized")
+	// Example: fmt.Errorf("%w: %s", errbrick.ErrUnauthenticated, "invalid token")
+	// So, the error message will be: "unauthenticated: invalid token", the error type will be errbrick.ErrUnauthenticated
+	// and the caller can check for it with errors.Is(err, errbrick.ErrUnauthenticated).
+	ErrUnauthenticated = errors.New("unauthenticated")
 )
 
 var errList = []error{
@@ -44,7 +44,7 @@ var errList = []error{
 	ErrNotFound,
 	ErrConflict,
 	ErrForbidden,
-	ErrUnauthorized,
+	ErrUnauthenticated,
 }
 
 func IsOneOf(err error, errs ...error) bool {

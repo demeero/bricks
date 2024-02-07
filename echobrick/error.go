@@ -5,9 +5,10 @@ import (
 	"log/slog"
 	"net/http"
 
+	"github.com/labstack/echo/v4"
+
 	"github.com/demeero/bricks/errbrick"
 	"github.com/demeero/bricks/slogbrick"
-	"github.com/labstack/echo/v4"
 )
 
 func ErrorHandler(err error, c echo.Context) {
@@ -29,14 +30,14 @@ func ErrorHandler(err error, c echo.Context) {
 		echoErr = echo.NewHTTPError(http.StatusForbidden, err.Error())
 	case errors.Is(err, errbrick.ErrConflict):
 		echoErr = echo.NewHTTPError(http.StatusConflict, err.Error())
-	case errors.Is(err, errbrick.ErrUnauthorized):
+	case errors.Is(err, errbrick.ErrUnauthenticated):
 		echoErr = echo.NewHTTPError(http.StatusUnauthorized, err.Error())
 	default:
-		slog.Error("internal server err", slog.Any("err", err))
+		lg.Error("internal server err", slog.Any("err", err))
 		echoErr = echo.NewHTTPError(http.StatusInternalServerError)
 	}
 	if err = c.JSON(echoErr.Code, echoErr); err != nil {
-		slog.Error("failed send err resp", slog.Any("err", err))
+		lg.Error("failed send err resp", slog.Any("err", err))
 	}
 }
 

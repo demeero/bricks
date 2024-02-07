@@ -75,7 +75,7 @@ func ErrUnaryServerInterceptor(skipper Skipper) grpc.UnaryServerInterceptor {
 		case errors.Is(err, errbrick.ErrUnauthenticated):
 			return nil, status.Error(codes.Unauthenticated, err.Error())
 		default:
-			slog.Error("internal err", slog.Any("err", err))
+			slogbrick.FromCtx(ctx).Error("internal err", slog.Any("err", err))
 			return resp, status.Error(codes.Internal, "internal error")
 		}
 	}

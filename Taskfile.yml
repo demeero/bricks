@@ -8,4 +8,4 @@ tasks:
       - go install golang.org/x/tools/go/analysis/passes/fieldalignment/cmd/fieldalignment@latest
       - cmd: fieldalignment -test=false -fix=true $(PWD)/...
         ignore_error: true
-      - docker run --rm -v ${PWD}/:/app -w /app golangci/golangci-lint:v1.55-alpine golangci-lint run -v --fix --timeout=420s -c golangci.yml
+      - docker run --rm -v ${PWD}/:/app -w /app golangci/golangci-lint:v1.56-alpine golangci-lint run -v --fix --timeout=420s -c golangci.yml

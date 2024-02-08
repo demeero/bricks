@@ -6,6 +6,7 @@ require (
 	github.com/MicahParks/keyfunc/v2 v2.1.0
 	github.com/ThreeDotsLabs/watermill v1.3.5
 	github.com/dentech-floss/watermill-opentelemetry-go-extra v0.1.0
+	github.com/go-ozzo/ozzo-validation/v4 v4.3.0
 	github.com/gocql/gocql v1.6.0
 	github.com/golang-jwt/jwt/v5 v5.1.0
 	github.com/kelseyhightower/envconfig v1.4.0
@@ -23,6 +24,8 @@ require (
 	go.opentelemetry.io/otel/sdk v1.20.0
 	go.opentelemetry.io/otel/sdk/metric v1.19.0
 	go.opentelemetry.io/otel/trace v1.20.0
+	google.golang.org/genproto v0.0.0-20230822172742-b8732ec3820d
+	google.golang.org/grpc v1.59.0
 )
 
 require (
@@ -62,7 +65,6 @@ require (
 	golang.org/x/time v0.3.0 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20230822172742-b8732ec3820d // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20230822172742-b8732ec3820d // indirect
-	google.golang.org/grpc v1.59.0 // indirect
 	google.golang.org/protobuf v1.31.0 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect

@@ -44,7 +44,7 @@ func ErrorHandler(fallback FallbackFunc) echo.HTTPErrorHandler {
 			echoErr = echo.NewHTTPError(http.StatusUnauthorized, err.Error())
 		default:
 			if fallback != nil {
-				if fallbackErr := fallback(err); fallback != nil {
+				if fallbackErr := fallback(err); fallbackErr != nil {
 					echoErr = fallbackErr
 					break
 				}

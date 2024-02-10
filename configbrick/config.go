@@ -41,6 +41,8 @@ type Log struct {
 	AddSource bool `split_words:"true" json:"add_source"`
 	// JSON enables JSON output.
 	JSON bool `json:"json"`
+	// Pretty enables pretty console output.
+	Pretty bool `json:"pretty"`
 }
 
 // HTTP represents the HTTP server configuration.

@@ -62,6 +62,7 @@ linters-settings:
       - cgocall # detect some violations of the cgo pointer passing rules
       - findcall
     enable:
+      - sloglint # check for common mistakes using the slog package
       - assign # check for useless assignments
       - atomic # check for common mistakes using the sync/atomic package
       - atomicalign #checks for non-64-bit-aligned arguments to sync/atomic functions

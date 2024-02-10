@@ -43,10 +43,10 @@ func InitTrace(ctx context.Context, cfg TraceConfig, opts ...sdktrace.TracerProv
 		return nil, fmt.Errorf("failed create trace exporter: %w", err)
 	}
 
-	sp := sdktrace.NewBatchSpanProcessor(traceExporter)
+	spanProcessor := sdktrace.NewBatchSpanProcessor(traceExporter)
 	if len(cfg.SpanExclusions) > 0 {
 		slog.Info("span exclusions enabled")
-		sp = newExclusionSpanProcessor(sp, cfg.SpanExclusions)
+		spanProcessor = newExclusionSpanProcessor(spanProcessor, cfg.SpanExclusions)
 	}
 	sampler := sdktrace.AlwaysSample()
 	if cfg.SamplingRate > 0 {
@@ -56,7 +56,7 @@ func InitTrace(ctx context.Context, cfg TraceConfig, opts ...sdktrace.TracerProv
 	opts = append([]sdktrace.TracerProviderOption{
 		sdktrace.WithSampler(sdktrace.ParentBased(sampler)),
 		sdktrace.WithResource(createRes(cfg)),
-		sdktrace.WithSpanProcessor(sp),
+		sdktrace.WithSpanProcessor(spanProcessor),
 	}, opts...)
 	tracerProvider := sdktrace.NewTracerProvider(opts...)
 	otel.SetTracerProvider(tracerProvider)

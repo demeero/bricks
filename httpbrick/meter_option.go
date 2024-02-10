@@ -93,21 +93,21 @@ func WithSkipper(skipper Skipper) OTelMeterMWOption {
 }
 
 func WithMetricNames(names otelMetricNames) OTelMeterMWOption {
-	return func(n *otelMeterOpts) {
+	return func(opts *otelMeterOpts) {
 		if names.ReqDurationHist != "" {
-			n.Metrics.Names.ReqDurationHist = names.ReqDurationHist
+			opts.Metrics.Names.ReqDurationHist = names.ReqDurationHist
 		}
 		if names.ReqCounter != "" {
-			n.Metrics.Names.ReqCounter = names.ReqCounter
+			opts.Metrics.Names.ReqCounter = names.ReqCounter
 		}
 		if names.ReqSizeHist != "" {
-			n.Metrics.Names.ReqSizeHist = names.ReqSizeHist
+			opts.Metrics.Names.ReqSizeHist = names.ReqSizeHist
 		}
 		if names.RespSizeHist != "" {
-			n.Metrics.Names.RespSizeHist = names.RespSizeHist
+			opts.Metrics.Names.RespSizeHist = names.RespSizeHist
 		}
 		if names.ActiveReqsCounter != "" {
-			n.Metrics.Names.ActiveReqsCounter = names.ActiveReqsCounter
+			opts.Metrics.Names.ActiveReqsCounter = names.ActiveReqsCounter
 		}
 	}
 }

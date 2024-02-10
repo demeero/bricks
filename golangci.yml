@@ -1,4 +1,42 @@
 linters-settings:
+  varnamelen:
+    # The longest distance, in source lines, that is being considered a "small scope." (defaults to 5)
+    # Variables used in at most this many lines will be ignored.
+    max-distance: 15
+    # Ignore "ok" variables that hold the bool return value of a type assertion. (defaults to false)
+    ignore-type-assert-ok: true
+    # Ignore "ok" variables that hold the bool return value of a map index. (defaults to false)
+    ignore-map-index-ok: true
+    # Ignore "ok" variables that hold the bool return value of a channel receive. (defaults to false)
+    ignore-chan-recv-ok: true
+    # Optional list of variable names that should be ignored completely. (defaults to empty list)
+    ignore-names:
+      - err
+      - lg # logger
+    # Optional list of variable declarations that should be ignored completely. (defaults to empty list)
+    # Entries must be in one of the following forms (see below for examples):
+    # - for variables, parameters, named return values, method receivers, or type parameters:
+    #   <name> <type>  (<type> can also be a pointer/slice/map/chan/...)
+    # - for constants: const <name>
+    ignore-decls:
+      - c echo.Context
+      - t testing.T
+      - i int
+      - j int
+      - T any
+      - in io.Reader
+      - w http.ResponseWriter
+      - h http.Handler
+
+  maintidx:
+    # Show functions with maintainability index lower than N.
+    # A high index indicates better maintainability (it's kind of the opposite of complexity).
+    # Default: 20
+    under: 20
+  interfacebloat:
+    # The maximum number of methods allowed for an interface.
+    # Default: 10
+    max: 15
   gosec:
     excludes:
       - G108
@@ -62,7 +100,6 @@ linters-settings:
       - cgocall # detect some violations of the cgo pointer passing rules
       - findcall
     enable:
-      - sloglint # check for common mistakes using the slog package
       - assign # check for useless assignments
       - atomic # check for common mistakes using the sync/atomic package
       - atomicalign #checks for non-64-bit-aligned arguments to sync/atomic functions
@@ -112,6 +149,23 @@ linters-settings:
 linters:
   disable-all: true
   enable:
+    #    - zerologlint # Detects the wrong usage of zerolog that a user forgets to dispatch with Send or Msg.
+    #    - promlinter # A linter for checking Prometheus metrics name via promlint.
+    #    - loggercheck # A linter checks the odd number of key and value pairs for common logger libraries (kitlog, klog, logr, zap)
+    #    - wrapcheck # Checks that errors returned from external packages are wrapped (https://github.com/tomarrell/wrapcheck)
+    - varnamelen # A Go Analyzer that checks that the length of a variable's name matches its usage scope
+    - usestdlibvars # A linter that detect the possibility to use variables/constants from the Go standard library.
+    - testableexamples # Linter checks if examples are testable (have an expected output).
+    - protogetter # Reports direct reads from proto message fields when getters should be used.
+    - mirror # suggests use of alternative functions/methods in order to gain performance boosts by avoiding unnecessary []byte/string conversion calls.
+    - maintidx  # measures the maintainability index of each function.
+    - interfacebloat # A linter that checks the number of methods inside an interface. (The bigger the interface, the weaker the abstraction. (C) Go Proverbs)
+    - gocheckcompilerdirectives # Checks that go compiler directive comments (//go:) are valid.
+    - execinquery # execinquery is a linter about query string checker in Query function which reads your Go src files and warnings it finds.
+    - bidichk # checks for dangerous unicode character sequences
+    - sloglint # A Go linter that ensures consistent code style when using log/slog.
+    - testifylint # Checks usage of github.com/stretchr/testify.
+    - spancheck # Checks for mistakes with OpenTelemetry/Census spans.
     - errcheck # Errcheck is a program for checking for unchecked errors in go programs. These unchecked errors can be critical bugs in some cases (by default)
     - gosimple # Linter for Go source code that specializes in simplifying a code. (by default)
     - govet # Vet examines Go source code and reports suspicious constructs, such as Printf calls whose arguments do not align with the format string (by default)
@@ -162,7 +216,6 @@ linters:
     - sqlclosecheck # Checks that sql.Rows and sql.Stmt are closed.
     - tenv # tenv is analyzer that detects using os.Setenv instead of t.Setenv since Go1.17
     - wastedassign # wastedassign finds wasted assignment statements. (https://github.com/sanposhiho/wastedassign)
-#    - wrapcheck # Checks that errors returned from external packages are wrapped (https://github.com/tomarrell/wrapcheck)
 
 run:
   issues-exit-code: 1

@@ -2,26 +2,26 @@ package httpbrick
 
 import "net/http"
 
-func ComputeApproximateRequestSize(r *http.Request) int64 {
-	s := 0
-	if r.URL != nil {
-		s = len(r.URL.Path)
+func ComputeApproximateRequestSize(req *http.Request) int64 {
+	size := 0
+	if req.URL != nil {
+		size = len(req.URL.Path)
 	}
 
-	s += len(r.Method)
-	s += len(r.Proto)
-	for name, values := range r.Header {
-		s += len(name)
+	size += len(req.Method)
+	size += len(req.Proto)
+	for name, values := range req.Header {
+		size += len(name)
 		for _, value := range values {
-			s += len(value)
+			size += len(value)
 		}
 	}
-	s += len(r.Host)
+	size += len(req.Host)
 
-	// N.B. r.Form and r.MultipartForm are assumed to be included in r.URL.
+	// N.B. req.Form and req.MultipartForm are assumed to be included in req.URL.
 
-	if r.ContentLength != -1 {
-		s += int(r.ContentLength)
+	if req.ContentLength != -1 {
+		size += int(req.ContentLength)
 	}
-	return int64(s)
+	return int64(size)
 }

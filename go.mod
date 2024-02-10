@@ -6,6 +6,7 @@ require (
 	github.com/MicahParks/keyfunc/v2 v2.1.0
 	github.com/ThreeDotsLabs/watermill v1.3.5
 	github.com/dentech-floss/watermill-opentelemetry-go-extra v0.1.0
+	github.com/felixge/httpsnoop v1.0.4
 	github.com/go-ozzo/ozzo-validation/v4 v4.3.0
 	github.com/gocql/gocql v1.6.0
 	github.com/golang-jwt/jwt/v5 v5.1.0

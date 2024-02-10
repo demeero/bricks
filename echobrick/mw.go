@@ -11,9 +11,6 @@ import (
 	"time"
 
 	"github.com/MicahParks/keyfunc/v2"
-	"github.com/demeero/bricks/httpbrick"
-	"github.com/demeero/bricks/otelbrick"
-	"github.com/demeero/bricks/slogbrick"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v4"
 	echomw "github.com/labstack/echo/v4/middleware"
@@ -21,53 +18,11 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/metric"
 	semconv "go.opentelemetry.io/otel/semconv/v1.21.0"
+
+	"github.com/demeero/bricks/httpbrick"
+	"github.com/demeero/bricks/otelbrick"
+	"github.com/demeero/bricks/slogbrick"
 )
-
-type LogCtxMWConfig struct {
-	Trace     bool
-	URI       bool
-	Host      bool
-	IP        bool
-	UserAgent bool
-	RequestID bool
-}
-
-// SlogCtxMW is a middleware that adds slog logger to request context.
-// It adds http_route_path and http_method fields to the logger.
-// Additional fields can be added by passing LogCtxMWConfig.
-func SlogCtxMW(cfg LogCtxMWConfig) echo.MiddlewareFunc {
-	return func(next echo.HandlerFunc) echo.HandlerFunc {
-		return func(c echo.Context) error {
-			req := c.Request()
-			attrs := []interface{}{
-				slog.String("http_path", c.Path()),
-				slog.String("http_method", req.Method),
-			}
-			if cfg.URI {
-				attrs = append(attrs, slog.String("http_uri", req.RequestURI))
-			}
-			if cfg.Host {
-				attrs = append(attrs, slog.String("http_host", req.Host))
-			}
-			if cfg.IP {
-				attrs = append(attrs, slog.String("http_ip", c.RealIP()))
-			}
-			if cfg.UserAgent {
-				attrs = append(attrs, slog.String("http_user_agent", req.UserAgent()))
-			}
-			if cfg.RequestID {
-				attrs = append(attrs, slog.String("http_req_id", c.Response().Header().Get(echo.HeaderXRequestID)))
-			}
-			reqLogger := slog.Default().With(attrs...)
-			ctx := req.Context()
-			if cfg.Trace {
-				reqLogger = slogbrick.WithOTELTrace(ctx, reqLogger)
-			}
-			c.SetRequest(req.WithContext(slogbrick.ToCtx(ctx, reqLogger)))
-			return next(c)
-		}
-	}
-}
 
 // SlogLogMW is a middleware to provide logging for each request via slog.
 func SlogLogMW(lvl slog.Level, skipper echomw.Skipper) echo.MiddlewareFunc {

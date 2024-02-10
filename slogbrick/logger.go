@@ -63,7 +63,7 @@ func Configure(cfg configbrick.Log, options ...LoggerOpt) {
 		h = tint.NewHandler(opts.W, &tint.Options{
 			Level:      level,
 			AddSource:  cfg.AddSource,
-			TimeFormat: time.DateTime,
+			TimeFormat: time.Kitchen,
 		})
 	default:
 		h = slog.NewTextHandler(opts.W, handlerOpts)

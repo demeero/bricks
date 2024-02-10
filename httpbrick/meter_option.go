@@ -25,9 +25,9 @@ type otelMetricNames struct {
 }
 
 type otelMeterOpts struct {
-	Attrs   otelMeterAttrsOpts
-	Metrics otelMeterMetricsOpts
 	Skipper Skipper
+	Metrics otelMeterMetricsOpts
+	Attrs   otelMeterAttrsOpts
 }
 
 type OTelMeterMWOption func(*otelMeterOpts)

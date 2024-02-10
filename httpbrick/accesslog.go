@@ -10,11 +10,11 @@ import (
 )
 
 type accessLogMWOpts struct {
-	Snoop   bool
-	InMsg   string
-	OutMsg  string
 	Skipper Skipper
 	Keys    AccessLogMWKeys
+	InMsg   string
+	OutMsg  string
+	Snoop   bool
 }
 
 // AccessLogMWKeys is a set of keys for access log middleware. Use it to configure the default keys.

@@ -29,11 +29,11 @@ var defaultLogCtxMWKeys = LogCtxMWKeys{
 type LogCtxMWOption func(*logCtxMWOpts)
 
 type logCtxMWOpts struct {
-	attrsSize uint8
+	Keys      LogCtxMWKeys
 	Opts      []httpbrick.LogCtxMWOption
+	attrsSize uint8
 	Route     bool
 	IP        bool
-	Keys      LogCtxMWKeys
 }
 
 // WithIPLogAttr allows to add client IP to request attributes in logger.

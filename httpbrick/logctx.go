@@ -41,6 +41,7 @@ type LogCtxMWKeys struct {
 }
 
 type logCtxMWOpts struct {
+	Keys        LogCtxMWKeys
 	attrsSize   uint8
 	Method      bool
 	OTelSpanCtx bool
@@ -48,7 +49,6 @@ type logCtxMWOpts struct {
 	Host        bool
 	Peer        bool
 	UserAgent   bool
-	Keys        LogCtxMWKeys
 }
 
 type LogCtxMWOption func(*logCtxMWOpts)
@@ -124,7 +124,7 @@ func logAttrsFromReq(req *http.Request, opts logCtxMWOpts) []interface{} {
 func WithOTelSpanCtxLogAttr() LogCtxMWOption {
 	return func(opts *logCtxMWOpts) {
 		opts.OTelSpanCtx = true
-		opts.attrsSize = opts.attrsSize + 2
+		opts.attrsSize += 2
 	}
 }
 

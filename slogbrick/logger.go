@@ -5,8 +5,9 @@ import (
 	"log/slog"
 	"os"
 
-	"github.com/demeero/bricks/configbrick"
 	"go.opentelemetry.io/otel/trace"
+
+	"github.com/demeero/bricks/configbrick"
 )
 
 type logCtxKey struct{}
@@ -49,7 +50,7 @@ func ParseLevel(level string, fallback slog.Level) slog.Level {
 func FromCtx(ctx context.Context) *slog.Logger {
 	logger, ok := ctx.Value(logKey).(*slog.Logger)
 	if !ok {
-		slog.Debug("no slog instance in context - using default")
+		// no slog instance in context - using default
 		return slog.Default()
 	}
 	return logger

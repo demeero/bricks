@@ -26,6 +26,7 @@ linters-settings:
       - T any
       - in io.Reader
       - w http.ResponseWriter
+      - r http.Request
       - h http.Handler
 
   maintidx:

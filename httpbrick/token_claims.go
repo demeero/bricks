@@ -15,11 +15,11 @@ type TokenClaimsMWOpts func(*tokenClaimsMWOpts)
 
 type tokenClaimsMWOpts struct {
 	RespWriter    func(w http.ResponseWriter, status int, msg string)
-	ErrStatusCode int
+	KeyFuncOpts   keyfunc.Options
 	JWKSURL       string
 	Header        string
 	HeaderPrefix  string
-	KeyFuncOpts   keyfunc.Options
+	ErrStatusCode int
 }
 
 // WithTokenClaimsRespWriter sets the response writer function for the middleware in the case of error.

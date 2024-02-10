@@ -69,6 +69,7 @@ func WithLogCtxMWKeys(keys LogCtxMWKeys) LogCtxMWOption {
 // Also, it can add other stuff to logger attributes that can be easily obtained from echo.Context.
 func SlogCtxMW(options ...LogCtxMWOption) echo.MiddlewareFunc {
 	opts := logCtxMWOpts{
+		Keys:      defaultLogCtxMWKeys,
 		Route:     true,
 		attrsSize: uint8(1),
 	}
@@ -80,10 +81,10 @@ func SlogCtxMW(options ...LogCtxMWOption) echo.MiddlewareFunc {
 		return func(c echo.Context) error {
 			attrs := make([]interface{}, 0, opts.attrsSize)
 			if opts.Route {
-				attrs = append(attrs, slog.String(routeLogKey, c.Path()))
+				attrs = append(attrs, slog.String(opts.Keys.Route, c.Path()))
 			}
 			if opts.IP {
-				attrs = append(attrs, slog.String(clientIPLogKey, c.RealIP()))
+				attrs = append(attrs, slog.String(opts.Keys.ClientIP, c.RealIP()))
 			}
 			ctx := c.Request().Context()
 			reqLogger := slogbrick.FromCtx(ctx).With(attrs...)

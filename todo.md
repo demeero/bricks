@@ -1,0 +1,6 @@
+- Replace config structs with options where possible
+- slogbrick.WithOTELTrace most probably should be removed
+- Add test target to Taskfile
+- Add release target to Taskfile
+- GH actions for tests and linting
+- Update README
